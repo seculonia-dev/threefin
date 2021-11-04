@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "threefin"
+version = "0.1.0"
+description = "A wrapper for Tufin scripts, to be compiled using PyInstaller."
+authors = ["Jens Krewald <jens.krewald@seculonia.net>"]
+license = "GPL-3.0-Or-Later"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pyinstaller = "^4.3"
+PySocks = "^1.7.1"
+aiohttp = "^3.7.4"
+asyncssh = "^2.6.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
