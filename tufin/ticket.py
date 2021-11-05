@@ -1,5 +1,22 @@
 
+'''
+Classes to simplify dealing with Tufin tickets.
+
+Features:
+    - By-name access to steps and fields
+    - No distinction between steps and tasks
+    - Updates to single or multiple fields via object method
+
+Assumptions about the workflow:
+    - Unique name per step
+    - One task per step
+    - Unique field names inside each step
+'''
+
 def ticket_creation_data(workflow, subject, fields, domain='', reference=None, priority='Normal'): # pylint: disable=too-many-arguments
+    '''
+    Creates a payload for ticket creation.
+    '''
     data = {
         'workflow': {'name': workflow}
         , 'subject': subject
@@ -48,9 +65,19 @@ class SimpleTicket():
             }
         return None
     async def set(self, conn, mapping):
+        '''
+        Apply the updates from mapping to the current step.
+        Mapping is of the form:
+            {
+                fieldname: field_payload
+                }
+        '''
         current_step = self.steps[self.current_step]
         return await current_step.set(conn, mapping)
     def show(self):
+        '''
+        A readable representation of the object.
+        '''
         return {
             'id': self.id
             , 'status': self.status
@@ -89,6 +116,13 @@ class SimpleStep():
             raise ValueError(ticketid, indata) from e
         return None
     async def set(self, conn, mapping):
+        '''
+        Apply the updates from mapping.
+        Mapping is of the form:
+            {
+                fieldname: field_payload
+                }
+        '''
         endpoint = f'tickets/{self.ticketid}/steps/{self.stepid}/tasks/{self.taskid}/fields'
         modifications = []
         for k, v in mapping.items():
@@ -101,9 +135,15 @@ class SimpleStep():
                 })
         body = {'fields': {'field': modifications}}
         return await conn.scput(endpoint, body)
-    def text(self, name):
-        return self.fields.get(name, {}).get('text')
+    def text(self, fieldname):
+        '''
+        Get the text content of the specified field, if any.
+        '''
+        return self.fields.get(fieldname, {}).get('text')
     def options(self, name):
+        '''
+        Get the selected and possible options of the specified field, if any.
+        '''
         field = self.fields.get(name)
         if field is None:
             return None, None
@@ -129,6 +169,9 @@ class SimpleStep():
             selected_options = []
         return selected_options, tuple(sorted(possible_options))
     def show(self):
+        '''
+        A readable representation of the object.
+        '''
         return {
             'stepid': self.stepid
             , 'taskid': self.taskid

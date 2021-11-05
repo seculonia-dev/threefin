@@ -1,7 +1,19 @@
 
+'''
+Convenience functions specific to SecureTrack.
+
+Implemented so far:
+    - Getting a device ID
+    - Getting an object name given the id of the object's device
+    - Zone lookups
+'''
+
 from ipaddress import ip_network, ip_address
 
 async def grab_device_id(conn, target):
+    '''
+    Grabs a device's id.
+    '''
     status, _, deviceres = await conn.stget('devices', params={'name': target})
     if status != 200:
         raise ValueError('Bad status', target, status, deviceres)
@@ -12,6 +24,9 @@ async def grab_device_id(conn, target):
     raise ValueError('No such device', target)
 
 async def grab_name(conn, device_id, obj):
+    '''
+    Grabs an object's name on a given device.
+    '''
     if isinstance(obj, str):
         endpoint = f'devices/{device_id}/network_objects'
         params = {'name': obj}
@@ -46,6 +61,7 @@ async def grab_name(conn, device_id, obj):
 
 async def zone_lookup(conn, objects):
     '''
+    Looks up the zones relevant to the objects specified.
     Assumptions:
         - @xsi.type is either "object_network" or "ip_network"
         - Display names are unique
@@ -85,6 +101,9 @@ async def zone_lookup(conn, objects):
 
 
 def zone_payload_object(obj, display_name_cache):
+    '''
+    Creates the payload for zone retrieval for an object.
+    '''
     management_id = obj['management_id']
     uid = obj['object_UID']
     display_name = obj.get('display_name')
@@ -97,6 +116,9 @@ def zone_payload_object(obj, display_name_cache):
         }
 
 def zone_payload_address(address):
+    '''
+    Creates the payload for zone retrieval for a network address.
+    '''
     if address.version == 4:
         xsitype = 'raw_network_subnet'
         netmask_default = '255.255.255.255'

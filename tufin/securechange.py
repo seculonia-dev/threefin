@@ -1,7 +1,24 @@
 
+'''
+Convenience functions specific to SecureChange.
+
+Implemented so far:
+    - Group changes retaining existing members
+To be implemented:
+    - Group changes not retaining existing members
+    - Group changes specifying members to be removed
+'''
+
+#TODO: Properly subdivide the various types of group changes.
+
 from tufin.securetrack import grab_name
 
 def group_change(mgmt_id, name, members, exists=True):
+    '''
+    Generates a group change payload from member data as provided by
+    make_member_data(...) . Caveat: This operation will only add members,
+    existing members are retained.
+    '''
     return {
         '@xsi.type': 'multi_group_change'
         , 'group_change': [
@@ -11,7 +28,11 @@ def group_change(mgmt_id, name, members, exists=True):
 
 def group_change_multiple(data):
     '''
-    data is a dict of form {(groupname, mgmt_id): (existing_or_new, members)}
+    Like group_change(...), but for several groups at a time. The data
+    argument is a dict of form
+        {
+            (groupname, mgmt_id): (existing_or_new, members)
+            }
     '''
     return {
         '@xsi.type': 'multi_group_change'
@@ -22,6 +43,10 @@ def group_change_multiple(data):
         }
 
 def group_change_payload(mgmt_id, name, members, exists=True):
+    '''
+    Creates a single group change payload. Used by group_change(...)
+    and group_change_multiple(...) .
+    '''
     return {
         'name': name
         , 'management_id': mgmt_id
@@ -30,6 +55,10 @@ def group_change_payload(mgmt_id, name, members, exists=True):
         }
 
 async def make_member_data(conn, mgmt_id, obj, name=None, comment=''):
+    '''
+    Creates the payload for a single member, checking whether a suitable
+    object already exists.
+    '''
     existing_name = await grab_name(conn, mgmt_id, obj)
     if existing_name is not None:
         return existing_object(mgmt_id, existing_name)
@@ -38,11 +67,16 @@ async def make_member_data(conn, mgmt_id, obj, name=None, comment=''):
     return new_host(mgmt_id, obj, name=name, comment=comment)
 
 def new_host(mgmt_id, ipobj, name=None, comment=''):
-    objname = f'Host_{ipobj}' if name is None else name
+    '''
+    Creates the payload for a single new host. A remove option
+    is not necessary.
+    '''
+    if name is None:
+        name = f'Host_{ipobj}'
     return {
         '@type': 'HOST'
-        , 'name': objname
-        , 'object_UID': objname
+        , 'name': name
+        , 'object_UID': name
         , 'object_type': 'Host'
         , 'object_details': f'{ipobj}/255.255.255.255'
         , 'management_id': mgmt_id
@@ -52,11 +86,16 @@ def new_host(mgmt_id, ipobj, name=None, comment=''):
         }
 
 def new_network(mgmt_id, ipobj, name=None, comment=''):
-    objname = f'Host_{ipobj.network_address}_{ipobj.prefixlen}' if name is None else name
+    '''
+    Creates the payload for a single new network. A remove option
+    is not necessary.
+    '''
+    if name is None:
+        name = f'Host_{ipobj.network_address}_{ipobj.prefixlen}'
     return {
         '@type': 'NETWORK'
-        , 'name': objname
-        , 'object_UID': objname
+        , 'name': name
+        , 'object_UID': name
         , 'object_type': 'Network'
         , 'object_details': ipobj.with_netmask
         , 'management_id': mgmt_id
@@ -66,6 +105,9 @@ def new_network(mgmt_id, ipobj, name=None, comment=''):
         }
 
 def existing_object(mgmt_id, name, remove=False):
+    '''
+    Creates the payload for a single existing object.
+    '''
     status = 'DELETED' if remove else 'ADDED'
     return {
         '@type': 'Object'
