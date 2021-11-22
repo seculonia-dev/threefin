@@ -2,14 +2,17 @@
 '''
 Convenience functions specific to SecureChange.
 
-Implemented so far:
-    - Group changes retaining existing members
-To be implemented:
-    - Group changes not retaining existing members
-    - Group changes specifying members to be removed
+Implemented:
+    Group changes:
+        - Adding members while retaining existing ones
+        - Removing members
+
+Specifying group memberships in toto is not in scope; all
+group changes here are PUT-like.
+
 '''
 
-#TODO: Properly subdivide the various types of group changes.
+#TODO: Rule changes.
 
 from tufin.securetrack import grab_name
 
@@ -42,6 +45,33 @@ def group_change_multiple(data):
             ]
         }
 
+def group_remove(mgmt_id, name, membernames):
+    '''
+    Generates a group change payload to remove the specified members.
+    '''
+    return {
+        '@xsi.type': 'multi_group_change'
+        , 'group_change': [
+            group_remove_payload(mgmt_id, name, membernames)
+            ]
+        }
+
+def group_remove_multiple(data):
+    '''
+    Like group_remove(...), but for several groups at a time. The data
+    argument is a dict of the form
+        {
+            (groupname, mgmt_id): membernames
+            }
+    '''
+    return {
+        '@xsi.type': 'multi_group_change'
+        , 'group_change': [
+            group_remove_payload(mgmt_id, name, members)
+            for (name, mgmt_id), members in data.items()
+            ]
+        }
+
 def group_change_payload(mgmt_id, name, members, exists=True):
     '''
     Creates a single group change payload. Used by group_change(...)
@@ -53,6 +83,22 @@ def group_change_payload(mgmt_id, name, members, exists=True):
         , 'members': {'member': members}
         , 'change_action': 'UPDATE' if exists else 'CREATE'
         }
+
+def group_remove_payload(mgmt_id, name, membernames):
+    '''
+    Creates a single group change payload to remove the specified member.
+    Used by group_remove(...) and group_remove_multiple(...) .
+    '''
+    return {
+        'name': name
+        , 'management_id': mgmt_id
+        , 'members': {'member': [
+            existing_object(mgmt_id, membername, remove=True)
+            for membername in membernames
+            ]}
+        , 'change_action': 'UPDATE'
+        }
+
 
 async def make_member_data(conn, mgmt_id, obj, name=None, comment=''):
     '''
