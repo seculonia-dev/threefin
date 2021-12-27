@@ -13,29 +13,14 @@ TODO:
     - Better secrets management
 '''
 
-from importlib import import_module
-
 from argparse import ArgumentParser
 from logging import getLogger, Formatter as LogFormatter, StreamHandler
 
 from asyncio import run
 from json import load as jload
 
-### Fake imports ###
-
-# These are listed here for PyInstaller to pick up.
-# Ideally we'd tell it just to grab all of modules/ ,
-# but for the moment this is easier.
-# To add a new module, add it here as well as in the
-# ALL_MODULES dict.
-
-if False: # pylint: disable=using-constant-test
-    import modules.hello
-    import modules.dump
-    import modules.faildump
-    import modules.groupadd
-
-### End fake imports ###
+from modules import ALL_MODULES, load_module
+from server import serve
 
 ### Defaults and constants ###
 
@@ -44,12 +29,7 @@ LOGFORMAT = '%(asctime)s %(name)s : %(funcName)s@%(module)s : %(message)s'
 DEFAULT_SECRETS_FILE = '/opt/tufin/data/securechange/scripts/data/secrets.json'
 DEFAULT_DUMP_DIRECTORY = '/opt/tufin/data/securechange/scripts/data/'
 
-ALL_MODULES = {
-    'hello'
-    , 'dump'
-    , 'faildump'
-    , 'groupadd'
-    }
+### End defaults and constants ###
 
 ALL_LOG_LEVELS = {
     'ERROR'
@@ -58,17 +38,6 @@ ALL_LOG_LEVELS = {
     , 'DEBUG'
     , 'NOTSET'
     }
-
-### End defaults and constants ###
-
-def load_module(module_name):
-    '''
-    Checks module_name against the declared names and dynamically
-    loads the corresponding module.
-    '''
-    if module_name not in ALL_MODULES:
-        raise ValueError('Invalid module name', module_name)
-    return import_module('modules.'+module_name)
 
 def parse_arguments():
     '''
@@ -79,10 +48,17 @@ def parse_arguments():
     '''
     #TODO: Defaults and/or choices from config file
     parser = ArgumentParser(description='Tufin script dispatcher')
-    parser.add_argument(
+
+    # Select module or give base URL
+    arggroup = parser.add_mutually_exclusive_group(required=True)
+    arggroup.add_argument(
         '-m', '--module'
-        , required=True
         , choices=ALL_MODULES
+        , default=None
+        )
+    arggroup.add_argument(
+        '-b', '--base-path'
+        , default='/threefin/v0.1/'
         )
     parser.add_argument(
         '--no-tls'
@@ -151,11 +127,14 @@ async def main():
     if secrets is None:
         logger.critical('Secrets file %s not found', args.secrets_file)
         return None
-    logger.info('Loading module %s', args.module)
-    module_logger = logger.getChild(args.module)
-    module = load_module(args.module)
-    logger.info('Running module %s', args.module)
-    await module.main(module_logger, secrets, args)
+    if args.module is not None:
+        logger.info('Loading module %s', args.module)
+        module_logger = logger.getChild(args.module)
+        module = load_module(args.module)
+        logger.info('Running module %s', args.module)
+        return await module.main(module_logger, secrets, args)
+    logger.info('Running server at %s', args.base_path)
+    await serve(logger, secrets, args)
 
 if __name__ == "__main__":
     run(main())
