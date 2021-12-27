@@ -1,6 +1,8 @@
 
 '''
-Mangles the input ticket and dumps both the raw and the mangled version to disk.
+Mangles the input ticket and dumps both the raw
+and the mangled version to disk. Needs credentials
+to operate - good for testing integrations.
 '''
 
 from json import dump as jdump, dumps as jdumps
@@ -21,14 +23,14 @@ def mangled_path(dumpdir, ticketid):
     '''
     return f'{dumpdir}/ticket_mangled_{ticketid}.json'
 
-async def dump(logger, secrets, args, action):
+async def dump(logger, secrets, args, instr, action):
     '''
     The core function of the module - main(...) only supplies the exit code.
     This function is reused in the faildump module, which motivates the split.
     '''
     dumpdir = args.dump_directory
     async with TufinConn(secrets, tls=args.tls) as conn:
-        ticketid, instatus, inticket = await read_ticket(conn, logger=logger)
+        ticketid, instatus, inticket = await read_ticket(conn, instr, logger=logger)
     with open(raw_path(dumpdir, ticketid, instatus), 'w+') as handle:
         jdump(inticket, handle)
     if not instatus < 400:
@@ -53,7 +55,7 @@ async def dump(logger, secrets, args, action):
         logger.info('Status: %s', instatus)
         logger.info('Raw data:\n%s', jdumps(inticket, indent=2))
         logger.info('Mangled data:\n%s', jdumps(formatted_ticket.show(), indent=2))
-    write_success_failure(action)
+    return action
 
-async def main(logger, secrets, args): # pylint: disable=unused-argument,missing-function-docstring
-    return await dump(logger, secrets, args, True)
+async def main(logger, secrets, args, instr): # pylint: disable=unused-argument,missing-function-docstring
+    return await dump(logger, secrets, args, instr, True)

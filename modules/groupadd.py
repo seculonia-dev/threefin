@@ -8,7 +8,7 @@ from ipaddress import ip_address
 from json import dumps
 
 from tufin.common import TufinConn
-from tufin.io import read_simple, write_success_failure
+from tufin.io import read_simple
 from tufin.securetrack import grab_device_id
 from tufin.securechange import make_member_data, group_change
 
@@ -22,9 +22,9 @@ FAKE_ADDRESSES = [
 TARGET_DEVICE = 'jk-CPMgmt'
 TARGET_GROUP = 'Z_Intern'
 
-async def main(logger, secrets, args): # pylint: disable=unused-argument,missing-function-docstring
+async def main(logger, secrets, args, instr): # pylint: disable=unused-argument,missing-function-docstring
     async with TufinConn(secrets, logger=logger, tls=args.tls) as conn:
-        ticket = await read_simple(conn, logger=logger)
+        ticket = await read_simple(conn, instr, logger=logger)
         mgmt_id = await grab_device_id(conn, TARGET_DEVICE)
         members = [
             await make_member_data(conn, mgmt_id, obj)
@@ -36,5 +36,5 @@ async def main(logger, secrets, args): # pylint: disable=unused-argument,missing
         status, headers, res = await ticket.set(conn, {'Modifications': groupchange})
         if status != 200:
             logger.error('Bad response: Status %s, headers %s, body %s', status, headers, res)
-            write_success_failure(False)
-    write_success_failure(True)
+            return False
+    return True

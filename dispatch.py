@@ -19,12 +19,16 @@ from logging import getLogger, Formatter as LogFormatter, StreamHandler
 from asyncio import run
 from json import load as jload
 
-from modules import ALL_MODULES, load_module
+from modules import ALL_MODULES, load_module, run_module
 from server import serve
+from tufin.io import write_success_failure
 
 ### Defaults and constants ###
 
-LOGFORMAT = '%(asctime)s %(name)s : %(funcName)s@%(module)s : %(message)s'
+# A nicer log format than the default
+LOGFORMAT = '%(asctime)s %(name)s : %(funcName)s : %(message)s'
+# # A log format that indicates the origin file
+# LOGFORMAT = '%(asctime)s %(name)s : %(funcName)s@%(pathname)s : %(message)s'
 
 DEFAULT_SECRETS_FILE = '/opt/tufin/data/securechange/scripts/data/secrets.json'
 DEFAULT_DUMP_DIRECTORY = '/opt/tufin/data/securechange/scripts/data/'
@@ -55,10 +59,11 @@ def parse_arguments():
         '-m', '--module'
         , choices=ALL_MODULES
         , default=None
+        , help='A standalone module to run.'
         )
     arggroup.add_argument(
-        '-b', '--base-path'
-        , default='/threefin/v0.1/'
+        '-s', '--socket'
+        , help="Path for the server' UNIX domain socket."
         )
     parser.add_argument(
         '--no-tls'
@@ -128,12 +133,10 @@ async def main():
         logger.critical('Secrets file %s not found', args.secrets_file)
         return None
     if args.module is not None:
-        logger.info('Loading module %s', args.module)
-        module_logger = logger.getChild(args.module)
-        module = load_module(args.module)
-        logger.info('Running module %s', args.module)
-        return await module.main(module_logger, secrets, args)
-    logger.info('Running server at %s', args.base_path)
+        result = await run_module(logger, secrets, args, None, args.module)
+        write_success_failure(result)
+        return None
+    logger.info('Running server at %s', args.socket)
     await serve(logger, secrets, args)
 
 if __name__ == "__main__":

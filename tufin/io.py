@@ -14,11 +14,11 @@ from tufin.ticket import SimpleTicket
 
 TUFINPARSER = XMLParser(encoding='utf-8')
 
-async def read_simple(conn, logger=None):
+async def read_simple(conn, instr, logger=None):
     '''
     Fetches the ticket indicated by stdin and returns it in mangled form.
     '''
-    tid, status, ticket = await read_ticket(conn, logger=logger)
+    tid, status, ticket = await read_ticket(conn, instr, logger=logger)
     if status != 200:
         logger.error('Failed to retrieve ticket', tid, status, ticket)
         raise ValueError
@@ -30,11 +30,11 @@ async def read_simple(conn, logger=None):
         raise
     return formatted_ticket
 
-async def read_ticket(conn, logger=None):
+async def read_ticket(conn, instr, logger=None):
     '''
     Fetches the ticket indicated by stdin.
     '''
-    tid = read_tid(logger=logger)
+    tid = read_tid(instr, logger=logger)
     if tid is None:
         return None, None, None
     status, _, ticket = await conn.scget(f'/tickets/{tid}')
@@ -42,11 +42,12 @@ async def read_ticket(conn, logger=None):
         ticket = ticket['ticket']
     return tid, status, ticket
 
-def read_tid(logger=None):
+def read_tid(instr, logger=None):
     '''
     Fetches the ticket ID from stdin.
     '''
-    instr = read_stdin(default='')
+    if instr is None:
+        instr = read_stdin(default='')
     if logger:
         logger.debug('stdin: %s', instr)
     if not instr:
@@ -75,17 +76,26 @@ def read_stdin(default=None):
         raise ValueError('Script needs ticket ID via stdin')
     return stdin.read() #No streaming
 
+def format_success_failure(success):
+    '''
+    Formats the response status as demanded by the Tufin
+    environment. Used for server responses and direct
+    output on /dev/stdin, see below.
+    '''
+    success_status = 'true' if success else 'false'
+    return (
+        '<response><condition_result>'
+        + str(success_status)
+        + '</condition_result></response>\n'
+        )
+
 def write_success_failure(success):
     '''
     Indicates script success or failure in the form required
     by SecureChange.
     '''
-    success_status = 'true' if success else 'false'
-    stdout.write(
-        '<response><condition_result>'
-        + str(success_status)
-        + '</condition_result></response>\n'
-        )
+    result = format_success_failure(success)
+    stdout.write(result)
 
 
 
