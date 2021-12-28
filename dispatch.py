@@ -63,7 +63,7 @@ def parse_arguments():
         )
     arggroup.add_argument(
         '-s', '--socket'
-        , help="Path for the server' UNIX domain socket."
+        , help="Path for the server's UNIX domain socket."
         )
     parser.add_argument(
         '--no-tls'

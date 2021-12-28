@@ -29,6 +29,7 @@ def make_app(logger, secrets, args):
     app = Application(middlewares=[
         normalize_path_middleware(
             merge_slashes=True
+            , append_slash=False
             , remove_slash=True
             )
         ]
