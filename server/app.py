@@ -4,7 +4,7 @@ Application logic for the server. So far only remote
 module invocation is implemented.
 '''
 
-from aiohttp.web import Application, RouteTableDef, Response
+from aiohttp.web import Application, RouteTableDef, Response, normalize_path_middleware
 
 from modules import run_module
 from tufin.io import format_success_failure
@@ -26,7 +26,13 @@ def make_app(logger, secrets, args):
         instr = await req.text()
         result = await run_module(logger, secrets, args, instr, module_name)
         return Response(text=format_success_failure(result))
-    app = Application()
+    app = Application(middlewares=[
+        normalize_path_middleware(
+            merge_slashes=True
+            , remove_slash=True
+            )
+        ]
+        )
     app.add_routes(routes)
     return app
 
