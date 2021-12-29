@@ -33,7 +33,7 @@ async def dump(logger, secrets, args, instr, action):
         ticketid, instatus, inticket = await read_ticket(conn, instr, logger=logger)
     with open(raw_path(dumpdir, ticketid, instatus), 'w+') as handle:
         jdump(inticket, handle)
-    if not instatus < 400:
+    if instatus is None or (not instatus < 400):
         if logger is not None:
             logger.error(f'Error retrieving ticket #{ticketid}')
             logger.info('Status: %s', instatus)
