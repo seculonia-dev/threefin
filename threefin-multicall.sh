@@ -25,4 +25,10 @@ url_base_raw="${thrf_protocol}://${thrf_host}:${thrf_port}${thrf_basepath}"
 url_base="${url_base_raw%/}"
 url_tail="api/v0.1/module/${thrf_module}"
 
-curl --noproxy "${thrf_host}" "${url_base}/${url_tail}" -X POST --data "$(cat)"
+if test ! -t 0 ; then
+    payload="$(cat)"
+else
+    echo "Must provide input on stdin" >&2 && exit 1
+fi
+
+curl --noproxy "${thrf_host}" "${url_base}/${url_tail}" -X POST --data "${payload}"
