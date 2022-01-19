@@ -15,6 +15,12 @@ def make_app(logger, secrets, args):
     So far only routes remote module invocations.
     '''
     routes = RouteTableDef()
+    @routes.get('/hello')
+    async def hello(req):
+        '''
+        A Hello World endpoint to verify connectivity.
+        '''
+        return Response(text='Hello, world!')
     @routes.post('/api/v0.1/module/{module}')
     async def handle_module(req): # pylint: disable=unused-variable
         '''
