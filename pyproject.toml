@@ -7,7 +7,6 @@ license = "GPL-3.0-Or-Later"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pyinstaller = "^4.3"
 PySocks = "^1.7.1"
 aiohttp = "^3.7.4"
 asyncssh = "^2.6.0"
