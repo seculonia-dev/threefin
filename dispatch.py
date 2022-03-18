@@ -80,12 +80,12 @@ def parse_arguments():
         '-S', '--secrets-file'
         , default=DEFAULT_SECRETS_FILE
         )
-    arggroup.add_argument(
-        '-B', '--database'
+    parser.add_argument(
+        '-D', '--database'
         , default=None
         )
     parser.add_argument(
-        '-D', '--dump-directory'
+        '-U', '--dump-directory'
         , default=DEFAULT_DUMP_DIRECTORY
         )
     return parser.parse_args()
