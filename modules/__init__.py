@@ -30,7 +30,7 @@ def load_module(module_name):
 
 async def run_module(logger, secrets, args, instr, module_name):
     '''
-    Dynamically runs and loads the specified module. If the
+    Dynamically loads and runs the specified module. If the
     instr parameter is not given, the module's main function
     will typically attempt to read stdin instead.
     '''
