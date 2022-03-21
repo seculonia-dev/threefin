@@ -9,10 +9,10 @@ async def handler_opt(logger, secrets, args, submodule, req): # pylint: disable=
     '''
     The /opt/ case.
     '''
-    return Response(text=f'Hello, {req.host}!')
+    return Response(text=f'Hello, {req.host}! Submodule: {submodule}')
 
 async def handler_varopt(logger, secrets, args, submodule, req): # pylint: disable=unused-argument
     '''
     The /var/opt/ case.
     '''
-    return Response(text=f'Hello, {req.host}!')
+    return Response(text=f'Hello, {req.host}! Submodule: {submodule}')

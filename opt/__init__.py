@@ -7,6 +7,7 @@ from importlib import import_module
 
 ALL_MODULES = {
     'hello'
+    , 'feed'
     }
 
 def load_opt(module_name):
@@ -23,7 +24,11 @@ async def run_opt(logger, secrets, args, req, var=False):
     Dynamically loads and runs the module specified in req.
     '''
     module_name = req.match_info['module']
-    submodule = req.match_info.get('submodule')
+    submodule = tuple(
+        field
+        for field in req.match_info.get('submodule', '').split('/')
+        if field
+        )
     mlogger = logger.getChild(module_name)
     mlogger.info('Loading module')
     module = load_opt(module_name)

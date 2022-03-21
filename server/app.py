@@ -51,7 +51,7 @@ def make_app(logger, secrets, args):
         '''
         return await run_opt(optlogger, secrets, args, req)
     routes.append(rpost('/api/v0.1/opt/{module}', handle_module))
-    routes.append(rpost('/api/v0.1/opt/{module}/{submodule}', handle_module))
+    routes.append(rpost('/api/v0.1/opt/{module}/{submodule:.*}', handle_module))
 
 
     async def handle_varopt(req): # pylint: disable=unused-variable
@@ -60,16 +60,9 @@ def make_app(logger, secrets, args):
         '''
         return await run_opt(varoptlogger, secrets, args, req, var=True)
     routes.append(rroute('*', '/api/v0.1/var/opt/{module}', handle_varopt))
-    routes.append(rroute('*', '/api/v0.1/var/opt/{module}/{submodule}', handle_varopt))
+    routes.append(rroute('*', '/api/v0.1/var/opt/{module}/{submodule:.*}', handle_varopt))
 
-    app = Application(middlewares=[
-        normalize_path_middleware(
-            merge_slashes=True
-            , append_slash=False
-            , remove_slash=True
-            )
-        ]
-        )
+    app = Application()
     app.add_routes(routes)
     return app
 
