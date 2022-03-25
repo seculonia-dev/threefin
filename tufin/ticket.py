@@ -125,7 +125,7 @@ class SimpleStep():
         '''
         Set step status to 'DONE'.
         '''
-        endpoint = f'tickets/{self.ticketid}/steps/{self.stepid}/task/{self.taskid}'
+        endpoint = f'tickets/{self.ticketid}/steps/{self.stepid}/tasks/{self.taskid}'
         return await conn.scput(endpoint, {'status': 'DONE'})
     async def set(self, conn, mapping):
         '''
