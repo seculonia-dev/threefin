@@ -64,6 +64,12 @@ class SimpleTicket():
             for instep in insteps
             }
         return None
+    async def advance(self, conn):
+        '''
+        Sets the status of the current step to 'DONE'.
+        '''
+        current_step = self.steps[self.current_step]
+        return await current_step.done()
     async def set(self, conn, mapping):
         '''
         Apply the updates from mapping to the current step.
@@ -115,6 +121,12 @@ class SimpleStep():
         except KeyError as e:
             raise ValueError(ticketid, indata) from e
         return None
+    async def done(self, conn):
+        '''
+        Set step status to 'DONE'.
+        '''
+        endpoint = f'tickets/{self.ticketid}/steps/{self.stepid}/task/{self.taskid}'
+        return await conn.scput(endpoint, {'status': 'DONE'})
     async def set(self, conn, mapping):
         '''
         Apply the updates from mapping.
