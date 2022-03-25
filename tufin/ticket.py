@@ -69,7 +69,7 @@ class SimpleTicket():
         Sets the status of the current step to 'DONE'.
         '''
         current_step = self.steps[self.current_step]
-        return await current_step.done()
+        return await current_step.done(conn)
     async def set(self, conn, mapping):
         '''
         Apply the updates from mapping to the current step.
