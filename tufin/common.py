@@ -77,11 +77,15 @@ class TufinConn():
             , self._stconn.close()
             )
         return None
-    async def _call(self, conn, method, url, body, params=None): # pylint: disable=too-many-arguments
+    async def _call(self, conn, method, url, body, params=None, xml=False): # pylint: disable=too-many-arguments
         '''
         A generic call to some endpoint.
         '''
-        res = await conn.request(method, url, json=body, params=params, ssl=self._tls)
+        if xml:
+            headers = {'content-type': 'application/xml', 'accept': 'application/json'}
+            res = await conn.request(method, url, data=body, headers=headers, params=params, ssl=self._tls)
+        else:
+            res = await conn.request(method, url, json=body, params=params, ssl=self._tls)
         try:
             resjson = await res.json()
         except ContentTypeError as e:
@@ -99,7 +103,12 @@ Status: %s
 Result: %s
 ''', method, url, params, body, res.status, dumps(resjson))
         return res.status, res.headers, resjson
-
+    async def scxml(self, method, endpoint, body, params=None):
+        url = self._scbaseurl + endpoint
+        return await self._call(self._scconn, method, url, body, params=params, xml=True)
+    async def stxml(self, method, endpoint, body, params=None):
+        url = self._stbaseurl + endpoint
+        return await self._call(self._stconn, method, url, body, params=params, xml=True)
     async def stcall(self, method, endpoint, body, params=None):
         '''
         A generic call to the SecureTrack endpoint.
