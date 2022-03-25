@@ -126,7 +126,8 @@ class SimpleStep():
         Set step status to 'DONE'.
         '''
         endpoint = f'tickets/{self.ticketid}/steps/{self.stepid}/tasks/{self.taskid}'
-        return await conn.scput(endpoint, {'status': 'DONE'})
+        payload = f'<task><status>DONE</status><fields /></task>'
+        return await conn.scxml('PUT', endpoint, payload)
     async def set(self, conn, mapping):
         '''
         Apply the updates from mapping.
