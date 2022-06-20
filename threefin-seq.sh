@@ -17,7 +17,7 @@ socket="$1"
 
 for ((i=2;i<=$#;i+=1)); do 
     module_url="${BASE_URL}/${!i}"
-    echo "Calling: ${module_url}"
-    curl --unix-socket "${socket}" -X "${METHOD}" "${module_url}" 1>&2
+    echo "Calling: ${module_url}" 1>&2
+    curl --unix-socket "${socket}" -X "${METHOD}" "${module_url}" || true
 done
 
