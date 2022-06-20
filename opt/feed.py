@@ -169,7 +169,11 @@ def get_feed_aggregate(database, feednames):
     '''
     Retrieve data of multiple feeds as one list without duplicates
     '''
-    qmarks = ','.join('?' for feedname in feednames)
+    if isinstance(feednames, str):
+        feeds = (feednames,)
+    else:
+        feeds = tuple(sorted(set(feednames)))
+    qmarks = ','.join('?' for feedname in feeds)
     query = '\n'.join([
         'SELECT DISTINCT c.data'
         , 'FROM opt_feed_content AS c'
@@ -178,10 +182,6 @@ def get_feed_aggregate(database, feednames):
         , f'WHERE n.name IN ({qmarks})'
         , 'ORDER BY c.data'
         ])
-    if isinstance(feednames, str):
-        feeds = (feednames,)
-    else:
-        feeds = tuple(sorted(set(feednames)))
     with connect(database) as conn:
         for row in conn.execute(query, feeds):
             yield row[0]
